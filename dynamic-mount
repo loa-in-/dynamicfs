@@ -1,0 +1,27 @@
+#!/bin/bash
+#PATH=".:$PATH"
+
+INSTALL_DIR="$HOME/.dynamicfs"
+CATEGORY_DIR="$INSTALL_DIR/known"
+
+if [ "$#" -lt "1" ]; then
+  echo Usage: $0 (category-name|"swap")
+  exit 1
+fi
+if [ ! -e "$CATEGORY_DIR" ]; then
+  mkdir -p "$CATEGORY_DIR" && echo Created empty category catalog: $CATEGORY_DIR
+fi
+
+category=$1
+shift
+CATFILE="$CATEGORY_DIR/$category"
+
+if [ ! -e "$CATFILE" ]; then
+  echo No category file: $CATFILE
+  echo Done: No entries!
+  exit 0
+fi
+echo Mounting category $category
+mergerfs_args=$(./dynamic-mount-parse "$CATFILE")
+
+sudo mergerfs ${mergerfs_args} /dynamic/$category
