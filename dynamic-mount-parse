@@ -1,3 +1,63 @@
-#!/bin/python2
+#!/bin/python3
+
+def main(argv):
+    if len(argv) -1 < 1:
+        print("Error: No argument given!")
+        return 1
+    
+    category_file = argv[1]
+    
+    try:
+        with open(category_file, 'r') as catfile :
+            
+            paths = list(
+                filter(lambda x:x is not None,
+                   map(parse_line,
+                       catfile.readlines() )))
+            
+            print(make_mount_command(paths), end='', flush=True)
+            return 0
+            
+    except FileNotFoundError:
+        print("Error: file not found!")
+        return -1
 
 
+PATH_START_CHARS = {'/','"'}
+
+def parse_line(line):
+    tokens =line.split()
+    keywords =set()
+    kword_token_count =0
+    for word in tokens:
+        if word[0] in PATH_START_CHARS:
+            break
+        else:
+            keywords.add(word)
+            kword_token_count +=1
+            break
+    
+    #TODO: stop assuming no whitespace in path and add escapes or sth
+    path = tokens[kword_token_count]
+    
+    description = " ".join(tokens[kword_token_count+1: ])
+    
+    return dict(
+        path =path,
+        modifiers =keywords,
+        description =description
+    )
+
+def can_mount(device):
+    import path
+    return path.exists("device")
+
+def make_mount_command(records):
+    for r in records:
+        if "merge" not in r['modifiers'] and can_mount(r['path']):
+            return "mount %s"
+
+if __name__ == "__main__":
+    import sys
+    code = main(sys.argv)
+    sys.exit(code)

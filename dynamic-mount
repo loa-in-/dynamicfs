@@ -1,7 +1,6 @@
 #!/bin/bash
-#PATH=".:$PATH"
-
 INSTALL_DIR="$HOME/.dynamicfs"
+PATH="${INSTALL_DIR}:$PATH"
 CATEGORY_DIR="$INSTALL_DIR/known"
 
 if [ "$#" -lt "1" ]; then
@@ -16,12 +15,16 @@ category=$1
 shift
 CATFILE="$CATEGORY_DIR/$category"
 
+if [[ "$category" -eq "swap" ]]; then
+  dynamic-mount-swap "$CATFILE"
+  exit $?
+fi
+
 if [ ! -e "$CATFILE" ]; then
   echo No category file: $CATFILE
   echo Done: No entries!
   exit 0
 fi
-echo Mounting category $category
-mergerfs_args=$(./dynamic-mount-parse "$CATFILE")
 
-sudo mergerfs ${mergerfs_args} /dynamic/$category
+echo Mounting category $category...
+sudo $(dynamic-mount-parse "$CATFILE") "/dynamic/$category"
